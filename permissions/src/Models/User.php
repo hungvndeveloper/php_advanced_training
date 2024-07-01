@@ -21,9 +21,9 @@ class User extends Model
         return $this->db->table('users')->where('id', $id)->update($data);
     }
 
-    public function findUser($id)
+    public function findUser($value, $type = 'id')
     {
-        return $this->db->table('users')->where('id', $id)->first();
+        return $this->db->table('users')->where($type, $value)->first();
     }
 
     public function deleteUser($id)
@@ -31,12 +31,29 @@ class User extends Model
         return $this->db->table('users')->where('id', $id)->delete();
     }
 
-    public function addUserRole($userId, $roleId)
+    public function addUsersRoles($data)
     {
-        return $this->db->table('users_roles')->insert([
-            'user_id' => $userId,
-            'role_id' => $roleId,
-        ]);
+        $values = '?,?';
+
+        //Insert Multiple
+        // insert into table (fielda, fieldb, ... ) values (?,?...), (?,?...)....
+
+        $sql = "INSERT INTO users_roles(user_id, role_id) VALUES ";
+        $sql .= str_repeat("($values), ", count($data) - 1) . "($values)";
+
+        $dataBinding = array_merge(...$data);
+        return $this->db->exec($sql, $dataBinding);
+    }
+
+    public function addUsersPermissions($data)
+    {
+        $values = '?,?';
+
+        $sql = "INSERT INTO users_permissions(user_id, permission_id) VALUES ";
+        $sql .= str_repeat("($values), ", count($data) - 1) . "($values)";
+
+        $dataBinding = array_merge(...$data);
+        return $this->db->exec($sql, $dataBinding);
     }
 
     public function getRoles($userId)
@@ -44,9 +61,23 @@ class User extends Model
         return $this->db->table('users_roles')->where('user_id', $userId)->all();
     }
 
-    public function deleteUserRole($userId)
+    public function deleteUserRole($userIds)
     {
-        $this->db->table('users_roles')->where('user_id', $userId)->delete();
+        $this->db->table('users_roles')->whereIn('user_id', $userIds)->delete();
     }
 
+    public function deleteUserPermission($userIds)
+    {
+        $this->db->table('users_permissions')->whereIn('user_id', $userIds)->delete();
+    }
+
+    public function getPermissions($userId)
+    {
+        return $this->db->table('users_permissions')->where('user_id', $userId)->all();
+    }
+
+    public function getPermissionsAll($userId)
+    {
+        return $this->db->query("SELECT permissions.value FROM users JOIN users_roles ON users.id = users_roles.user_id JOIN roles_permissions ON users_roles.role_id=roles_permissions.role_id JOIN permissions ON roles_permissions.permission_id=permissions.id WHERE users.id = ?", [$userId]);
+    }
 }

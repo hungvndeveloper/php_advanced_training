@@ -1,11 +1,13 @@
 <?php
+
 namespace App\Controllers;
 
-use App\Models\Action;
-use App\Models\Module;
-use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Action;
+use App\Models\Module;
+use Pecee\Http\Request;
+use App\Models\Permission;
 
 class PermissionController
 {
@@ -23,8 +25,9 @@ class PermissionController
         $pageTitle = 'Phân quyền';
         $roles = $this->roleModel->getRoles();
         $users = $this->userModel->getUsers();
+        $modules = $this->getModules();
 
-        return view('permissions.index', compact('pageTitle', 'roles', 'users'));
+        return view('permissions.index', compact('pageTitle', 'roles', 'users', 'modules'));
     }
 
     public function add()
@@ -55,7 +58,6 @@ class PermissionController
                 }
                 $this->roleModel->addPermission($roleId, $permissionId);
             }
-
         }
         return redirect('/permissions');
     }
@@ -121,5 +123,4 @@ class PermissionController
         }
         return $modules;
     }
-
 }
